@@ -10,7 +10,15 @@ use \DB;
 
 class UsersService {
 
-    public function getUsersWithSimilarRates(User $user, int $acceptance = 20): Collection {
+        
+    /**
+     * Get all users with the same preferences than the user
+     *
+     * @param  User $user
+     * @param  int $acceptance
+     * @return Collection
+     */
+    public function getUsersWithSimilarRates(User $user, int $acceptance = 10): Collection {
         $visits = $user->visits;
         $users = User::where('id', '<>', $user->id)
                     ->when(!$visits->isEmpty(), function($query) use ($acceptance, $visits){
@@ -18,8 +26,8 @@ class UsersService {
                             $query->where(function($query) use ($acceptance, $visits){
                                 $visits->each(function($city) use ($acceptance, &$query){
                                     $rate = $city->pivot->rate;
-                                    $minRate = $rate * ((100 - $acceptance) / 100);
-                                    $maxRate = $rate * ((100 + $acceptance) / 100);
+                                    $minRate = $rate + $acceptance;
+                                    $maxRate = $rate - $acceptance;
                                     $query->orWhere(function($query) use ($city, $minRate, $maxRate){
                                         $query->where('cityId', $city->id)->whereBetween('rate', [$minRate, $maxRate]);
                                     });
@@ -29,7 +37,13 @@ class UsersService {
                 })->get();
         return $users;
     }
-
+    
+    /**
+     * Get friends of the direct friends from the user
+     *
+     * @param User $user
+     * @return Collection
+     */
     public function getFriendsOfFriends(User $user): Collection {
         $friendsOfFriends = collect();
         if(!$user->connections->isEmpty()){
@@ -43,6 +57,12 @@ class UsersService {
     }
 
 
+    /**
+     * Suggest friends from the list of 2depth friends
+     *
+     * @param User $user
+     * @return Collection
+     */
     public function getFriendSuggestions(User $user): Collection {
         $suggestions = collect();
         

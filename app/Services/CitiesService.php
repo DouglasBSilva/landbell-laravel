@@ -13,6 +13,13 @@ class CitiesService {
 
     public function __construct(private UsersService $userService){}
 
+    /**
+     * Get cities recommendation for user based on rate similarities
+     * from other users
+     *
+     * @param User $user
+     * @return Collection
+     */
     public function getRecommendations(User $user): Collection{
         $visits = $user->visits;
         $users = $this->userService->getUsersWithSimilarRates($user);

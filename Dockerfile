@@ -44,3 +44,6 @@ RUN chown -R $user:www-data /var/www
 
 # Set working directory
 WORKDIR /var/www
+USER $user
+
+CMD ["bash", "-c", "composer install --ignore-platform-reqs && php-fpm"]
